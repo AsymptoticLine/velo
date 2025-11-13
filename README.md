@@ -13,26 +13,28 @@ The Velo code is represented as a grid, the **Cosmos**. The raw input code is ha
 ### The Vessel (Program State)
 
 The program state is embodied by the `Vessel`, which has:
-* **Coordinates** (`x`, `y`)
-* **Direction** (`Direction`)
-* **Velocity** (`i32`)
+
+- **Coordinates** (`x`, `y`)
+- **Direction** (`Direction`)
+- **Velocity** (`i32`)
 
 The Vessel always starts at the exact center of the Cosmos. Its initial state is determined by the center Rune:
-* If the center Rune is a `Thrust` rune (`^`, `v`, `<`, `>`), the Vessel starts with a velocity of 1 and the corresponding direction.
-* Otherwise, the Vessel starts with no direction and zero velocity, causing the program to immediately terminate as it has no initial thrust.
+
+- If the center Rune is a `Thrust` rune (`^`, `v`, `<`, `>`), the Vessel starts with a velocity of 1 and the corresponding direction.
+- Otherwise, the Vessel starts with no direction and zero velocity, causing the program to immediately terminate as it has no initial thrust.
 
 ### Runes (Instructions)
 
 Runes are characters in the Cosmos that modify the Vessel's state:
 
-| Rune Character | Rune Type | Effect on Vessel |
-| :--- | :--- | :--- |
-| `^`, `v`, `<`, `>` | `Thrust` | **Same Direction:** Velocity +1. **Opposite Direction:** Velocity -1. **Perpendicular Direction:** Direction changes to the Rune's direction, Velocity is unchanged. |
-| `+` | `Boost` | Velocity +1 (Direction unchanged). |
-| `-` | `Brake` | Velocity -1 (Direction unchanged). If Velocity drops to 0, the program halts. |
-| `*` | `Star` | **Rebound:** Velocity unchanged, Direction reverses 180 degrees. |
-| `P` | `Parking` | Velocity becomes 1 (Direction unchanged). |
-| Other | `Void` | No effect on Velocity or Direction. |
+| Rune Character     | Rune Type | Effect on Vessel                                                                                                                                                     |
+| :----------------- | :-------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `^`, `v`, `<`, `>` | `Thrust`  | **Same Direction:** Velocity +1. **Opposite Direction:** Velocity -1. **Perpendicular Direction:** Direction changes to the Rune's direction, Velocity is unchanged. |
+| `+`                | `Boost`   | Velocity +1 (Direction unchanged).                                                                                                                                   |
+| `-`                | `Brake`   | Velocity -1 (Direction unchanged). If Velocity drops to 0, the program halts.                                                                                        |
+| `*`                | `Star`    | **Rebound:** Velocity unchanged, Direction reverses 180 degrees.                                                                                                     |
+| `P`                | `Parking` | Velocity becomes 1 (Direction unchanged).                                                                                                                            |
+| Other              | `Void`    | No effect on Velocity or Direction.                                                                                                                                  |
 
 ### Execution Flow
 
@@ -47,10 +49,10 @@ The Vessel continuously moves in its current `Direction` by the amount of 1 unit
 
 ## 🛠️ Project Structure
 
-* `src/main.rs`: Handles file loading, cosmos setup, Vessel initialization, and managing program termination.
-* `src/lib.rs`: Module exports.
-* `src/models.rs`: Defines core data structures: `Rune`, `Cosmos`, `Direction`, `Rotation`, and `Vessel`.
-* `src/sail.rs`: Contains the main execution logic (`sail` function), which iterates the Vessel's movement through the Cosmos.
+- `src/main.rs`: Handles file loading, cosmos setup, Vessel initialization, and managing program termination.
+- `src/lib.rs`: Module exports.
+- `src/models.rs`: Defines core data structures: `Rune`, `Cosmos`, `Direction`, `Rotation`, and `Vessel`.
+- `src/sail.rs`: Contains the main execution logic (`sail` function), which iterates the Vessel's movement through the Cosmos.
 
 ## 🚧 Next Steps (TODO)
 
