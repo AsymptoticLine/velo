@@ -1,13 +1,12 @@
 use std::io::{self, Read};
 
 /// The fundamental elements in the Velo cosmos that affect the Vessel's movement.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Rune {
     ThrustUp,        // '^' - Changes direction/speed, changes Resonance Frequency (Pointer)
     ThrustDown,      // 'v' - Changes direction/speed, changes Resonance Frequency (Pointer)
     ThrustLeft,      // '<' - Changes direction/speed, affecting Resonance Frequency
     ThrustRight,     // '>' - Changes direction/speed, affecting Resonance Frequency
-    Star,            // '*' - Reverses direction (Rebound)
     Parking,         // 'P' - Resets velocity to 1
     EntropyIncrease, // '+' - Increases current data cell's entropy level by 1
     EntropyDecrease, // '-' - Decreases current data cell's entropy level by 1
@@ -15,7 +14,8 @@ pub enum Rune {
     SteerRight,      // ']' - Conditional 90-degree right turn
     Input,           // ',' - Reads a byte from input to the current data cell
     Output,          // '.' - Prints the current data cell's value as an ASCII character
-    Void,            // Other characters - No effect
+    Debug,
+    Void, // Other characters - No effect
 }
 
 impl Rune {
@@ -26,7 +26,6 @@ impl Rune {
             Self::ThrustDown => vessel.apply_directional_thrust(Direction::Down),
             Self::ThrustLeft => vessel.apply_directional_thrust(Direction::Left),
             Self::ThrustRight => vessel.apply_directional_thrust(Direction::Right),
-            Self::Star => vessel.apply_rebound(),
             Self::Parking => vessel.apply_parking(),
             Self::EntropyIncrease => vessel.charge_entropy(),
             Self::EntropyDecrease => vessel.drain_entropy(),
@@ -48,7 +47,7 @@ impl Rune {
 
                 match io::stdin().read_exact(&mut buffer) {
                     Ok(_) => {
-                        vessel.set_entropy_level(buffer[0] as i32);
+                        vessel.set_entropy_level(buffer[0] as u32);
                     }
                     Err(_) => {
                         // On EOF or read error, set the cell value to 0.
@@ -59,19 +58,49 @@ impl Rune {
             Self::Output => {
                 // Prints the current data cell's entropy level as an ASCII character.
                 let value = vessel.current_entropy();
-                if let Some(c) = char::from_u32(value as u32) {
+                if let Some(c) = char::from_u32(value) {
                     print!("{}", c);
                 } else {
                     eprintln!("Velo Warning: Cannot output valid ASCII value: {}", value);
                 }
             }
-            Self::Void => (),
+            Self::Debug | Self::Void => (),
         }
     }
 }
 
 /// The Velo universe, represented as a grid of Runes.
-pub type Cosmos = Vec<Vec<Rune>>;
+pub struct Cosmos {
+    runes: Vec<Vec<Rune>>,
+    width: usize,
+    height: usize,
+}
+
+impl Cosmos {
+    pub fn new(runes: Vec<Vec<Rune>>, width: usize, height: usize) -> Self {
+        Self {
+            runes,
+            width,
+            height,
+        }
+    }
+
+    pub fn width(&self) -> usize {
+        self.width
+    }
+
+    pub fn height(&self) -> usize {
+        self.height
+    }
+
+    pub fn get(&self, x: usize, y: usize) -> Rune {
+        if y >= self.height || x >= self.runes[y].len() {
+            Rune::Void
+        } else {
+            self.runes[y][x]
+        }
+    }
+}
 
 /// The direction of the Vessel's travel.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -104,11 +133,11 @@ impl Direction {
         }
     }
 
-    fn consistent_with(self, other: Direction) -> bool {
+    fn consistent_with(self, other: Self) -> bool {
         self == other
     }
 
-    fn opposite_to(self, other: Direction) -> bool {
+    fn opposite_to(self, other: Self) -> bool {
         match (self, other) {
             (Self::Up, Self::Down) => true,
             (Self::Down, Self::Up) => true,
@@ -118,24 +147,8 @@ impl Direction {
         }
     }
 
-    fn opposite(self) -> Direction {
-        match self {
-            Direction::Up => Direction::Down,
-            Direction::Down => Direction::Up,
-            Direction::Left => Direction::Right,
-            Direction::Right => Direction::Left,
-            Direction::None => Direction::None,
-        }
-    }
-
-    /*
-    fn calculate_rotation(self, new_direction: Direction) -> Rotation {
-        Rotation::from_i32((self.to_i32() - new_direction.to_i32() + 4) % 4)
-    }
-    // */
-
-    fn rotate(self, rotation: Rotation) -> Direction {
-        Direction::from_i32((self.to_i32() + rotation.to_i32()) % 4)
+    fn rotate(self, rotation: Rotation) -> Self {
+        Self::from_i32((self.to_i32() + rotation.to_i32()) % 4)
     }
 }
 
@@ -146,7 +159,6 @@ pub enum Rotation {
     Right,
     UTurn, // 180-degree reversal
     Left,
-    None,
 }
 
 impl Rotation {
@@ -156,21 +168,8 @@ impl Rotation {
             Self::Right => 1,
             Self::UTurn => 2,
             Self::Left => 3,
-            Self::None => -1,
         }
     }
-
-    /*
-    fn from_i32(n: i32) -> Self {
-        match n {
-            0 => Self::Straight,
-            1 => Self::Right,
-            2 => Self::UTurn,
-            3 => Self::Left,
-            _ => Self::None,
-        }
-    }
-    // */
 }
 
 /// The main execution entity, an exploration vessel moving through the Cosmos.
@@ -183,7 +182,7 @@ pub struct Vessel {
     // The Vessel's physical movement step size is always 1, regardless of this value.
     velocity: usize,
     // The potentially infinite data storage (Data Lattice).
-    data_lattice: Vec<i32>,
+    data_lattice: Vec<u32>,
 }
 
 impl Vessel {
@@ -233,12 +232,12 @@ impl Vessel {
         }
     }
 
-    pub fn current_entropy(&mut self) -> i32 {
+    pub fn current_entropy(&mut self) -> u32 {
         self.check_and_expand_data_lattice();
         self.data_lattice[self.velocity]
     }
 
-    pub fn set_entropy_level(&mut self, new_entropy_level: i32) {
+    pub fn set_entropy_level(&mut self, new_entropy_level: u32) {
         self.check_and_expand_data_lattice();
         self.data_lattice[self.velocity] = new_entropy_level;
     }
@@ -256,7 +255,7 @@ impl Vessel {
         rune.act_on(self);
     }
 
-    fn increase_velority(&mut self) {
+    fn increase_velocity(&mut self) {
         // Increases the Resonance Frequency (moves the data pointer right).
         self.velocity += 1;
     }
@@ -274,13 +273,11 @@ impl Vessel {
 
     fn drain_entropy(&mut self) {
         // Decreases the entropy level of the current data cell by 1.
-        let new_entropy_level = self.current_entropy() - 1;
-        self.set_entropy_level(new_entropy_level);
-    }
-
-    fn apply_rebound(&mut self) {
-        // Reverses the vessel's direction (180-degree turn).
-        self.direction = self.direction.opposite();
+        let current_entropy = self.current_entropy();
+        if current_entropy >= 1 {
+            let new_entropy_level = self.current_entropy() - 1;
+            self.set_entropy_level(new_entropy_level);
+        }
     }
 
     fn apply_parking(&mut self) {
@@ -300,7 +297,7 @@ impl Vessel {
     fn apply_directional_thrust(&mut self, rune_direction: Direction) {
         if self.direction.consistent_with(rune_direction) {
             // Same direction: Increase velocity/pointer.
-            self.increase_velority();
+            self.increase_velocity();
         } else if self.direction.opposite_to(rune_direction) {
             // Opposite direction: Decrease velocity/pointer.
             self.decrease_velocity();

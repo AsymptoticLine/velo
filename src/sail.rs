@@ -1,16 +1,32 @@
-use crate::models::{Cosmos, Vessel};
+use crate::models::{Cosmos, Rune, Vessel};
 
 /// Defines the reason for the Velo program's execution halt.
 pub enum Termination {
     Stopped,                      // Vessel velocity/pointer reached zero.
-    NoSignal,                     // Vessel traveled out of the Cosmos bounds.
+    NoSignal(usize, usize),       // Vessel traveled out of the Cosmos bounds.
     NoInitialVelocityOrDirection, // Start Rune was not a Thrust rune.
 }
 
+pub struct Config {
+    debug: bool,
+    trace: bool,
+    ignore_void: bool,
+}
+
+impl Config {
+    pub fn new(debug: bool, trace: bool, ignore_void: bool) -> Self {
+        Self {
+            debug,
+            trace,
+            ignore_void,
+        }
+    }
+}
+
 /// Runs the Velo program by moving the Vessel through the Cosmos grid.
-pub fn sail(cosmos: Cosmos, mut vessel: Vessel) -> Termination {
-    let width = cosmos[0].len();
-    let height = cosmos.len();
+pub fn sail(cosmos: Cosmos, mut vessel: Vessel, config: Config) -> Termination {
+    let width = cosmos.width();
+    let height = cosmos.height();
 
     // Check for initial velocity requirement (must start on a Thrust rune)
     if vessel.velocity() == 0 {
@@ -19,27 +35,30 @@ pub fn sail(cosmos: Cosmos, mut vessel: Vessel) -> Termination {
 
     // The execution loop: continues as long as the Velocity/Pointer is positive.
     while vessel.velocity() > 0 {
-        if let Ok((x, y)) = vessel.get_next_coordinate() {
-            // Check if the next coordinates are within the Cosmos boundaries.
-            if x >= width || y >= height {
-                return Termination::NoSignal;
+        match vessel.get_next_coordinate() {
+            Ok((x, y)) => {
+                // Check if the next coordinates are within the Cosmos boundaries.
+                if x >= width || y >= height {
+                    return Termination::NoSignal(x.min(width - 1), y.min(height - 1));
+                }
+
+                let rune = cosmos.get(x, y);
+
+                // Update the vessel's position.
+                vessel.move_to(x, y);
+
+                // Impact the Rune and execute the associated instruction/movement.
+                vessel.impact_rune(rune);
+
+                if rune == Rune::Debug && config.debug {
+                    println!("[Debug] Vessel: {:?}. Rune: {:?}", vessel, rune);
+                }
+
+                if config.trace && !(config.ignore_void && rune == Rune::Void) {
+                    println!("Vessel: {:?}. Rune: {:?}", vessel, rune);
+                }
             }
-
-            let rune = cosmos[y][x];
-
-            // Update the vessel's position.
-            vessel.move_to(x, y);
-
-            // Impact the Rune and execute the associated instruction/movement.
-            vessel.impact_rune(rune);
-
-            /*
-            // Debug output: prints the state of the vessel after impacting the rune.
-            println!("Vessel: {:?}. Rune: {:?}", vessel, rune);
-            // */
-        } else {
-            // This occurs if a boundary check failed in `get_next_coordinate` (e.g., trying to move from 0 to -1).
-            return Termination::NoSignal;
+            Err(_) => return Termination::NoSignal(vessel.x(), vessel.y()),
         }
     }
 

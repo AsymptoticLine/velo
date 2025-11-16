@@ -1,0 +1,195 @@
+>,v
+v <
+
+# COPY [1] TO [2]
+>                                 v  # GOTO COPY 0
+v                                   < # FROM COPY 0
+| # [3] = 64
+> >>> +++++ +++ v
+v               <
+> - < +++++ +++ > v
+^                 ]
+v >>              <
+| # [4] = [2] <= [3](64)
+>                                           v   # GOTO LESS-THAN 0
+v                                             < # FROM LESS-THAN 0
+| # IF [4]
+>                                                     v    # GOTO IF 0
+  # IF: INPUT <= 64
+  v                                                     <  # FROM IF 0-TRUE
+  >                                                                 v # GOTO PRINT-INDEX-1
+
+  # IF: INPUT > 64
+  v                                                      < # FROM IF 0-FALSE
+  | # COPY [1] TO [2]
+  > +<<<                         >v     # GOTO COPY 1
+                                  ^
+  v                                   < # FROM COPY 1
+  | # [3] = 90
+  > >>> +++++ ++++ v
+  v                <
+  > - < +++++ +++++ > v
+  ^                   ]
+  v >>                <
+  | # [4] = [2] <= [3](90)
+  > >>>+<<<                                >v     # GOTO LESS-THAN 1
+                                            ^
+  v                                             < # FROM LESS-THAN 1
+  | # IF [4]
+  > >+>+<<                                           >v     # GOTO IF 1
+                                                      ^
+    # IF: [2] <= 90
+    v >>-<-                                                <  # FROM IF 1-TRUE
+    | # [2] = 32
+    > ++++ v
+    v      <
+    > - < +++++ +++ > v
+    ^                 ]
+    v >               <
+    | # [1] += [2]
+    > - < + > ]                                                     v # GOTO PRINT-INDEX-1
+    ^         <
+
+    # IF: [2] > 90
+    v >>-<<                                                 < # FROM IF 1-FALSE
+    | # COPY [1] TO [2]
+    > ++<<<                      >v       # GOTO COPY 2
+                                  ^
+    v                                   < # FROM COPY 2
+    | # [3] = 96
+    > >>> +++++ +++ v
+    v               <
+    > - < +++++ +++++ ++ > v
+    ^                      ]
+    v >>                   <
+    | # [4] = [2] <= [3](96)
+    > >>>++<<<                             >v       # GOTO LESS-THAN 2
+                                            ^
+    v                                             < # FROM LESS-THAN 2
+    | IF [4]
+    > >++>++<<                                       >v       # GOTO IF 2
+                                                      ^
+      # IF: [2] <= 96
+      v >>--<-                                                <  # FROM IF 2-TRUE
+      >                                                             v # GOTO PRINT-INDEX-1
+
+      # IF: [2] > 96
+      v >>--<<                                                 < # FROM IF 2-FALSE
+      | # COPY [1] TO [2]
+      > +++<<<                   >v     # GOTO COPY 3
+                                  ^
+      v                                   < # FROM COPY 3
+      | # [3] = 122
+      > >>> +++++ +++++ + v
+      v                   <
+      > - < +++++ +++++ + > v
+      ^                     ]
+      v > + >               <
+      | # [4] = [2] <= [3](122)
+      > >>>+++<<<                          >v     # GOTO LESS-THAN 3
+                                            ^
+      v                                             < # FROM LESS-THAN 3
+      | # IF [4]
+      >  >+++>+++<<                                  >v # GOTO IF 3
+                                                      ^
+        # IF [2] <= 122
+        v >>---<-                                                <  # FROM IF 3-TRUE
+        | # [2] = 32
+        > +++++ +++ v
+        v           <
+        > - < ++++ > ] v
+        ^            < |
+        v >            <
+        | # [1] -= [2]
+        > - < - > ]                                                 v # GOTO PRINT-INDEX-1
+        ^         <
+
+        v >>---<<                                                 < # FROM IF 3-FALSE
+        >                                                           v # GOTO PRINT-INDEX-1
+
+# COPY
+# COPY [CUR] TO [CUR+1].
+# USE [CUR+2].
+# LOCATION_CODE = [CUR+3].
+v                                 <
+| # [CUR+1] = 0
+>> v
+ ^-]
+v  <
+# [CUR+2] = 0
+>> v
+ ^-]
+v>><
+| # MOVE [CUR] TO [CUR+1] AND [CUR+2]
+[ >< ->+>+<< v
+| ^<         ]
+v<           <
+v
+| # MOVE [CUR+2] TO [CUR]
+[ >< -<<+>> v
+| ^<        ]
+^           |
+v           <
+v
+# JUMP
+>]<<<                               ^
+ >-]<<<                               ^
+   >-]<<<                               ^
+     >-]<<<                               ^
+       P
+       ^
+
+# LESS-THAN
+# IF [CUR] <= [CUR+1] THEN [CUR+2] += 1 TILL [CUR+2] > 0 ELSE [CUR+2] = 0.
+# [CUR] AND [CUR+1] WILL BE SET TO 0.
+# LOCATION_CODE = [CUR+3].
+# CUR = CUR + 2.
+v                                           <
+>       ] >> ] + v
+|       v    |   |
+|       -    |   |
+^  - >  ]    |   |
+        v    |   |
+v - < > ]    |   |
+[   ^   |    |   ^
+^       |    ^   ^
+v       <    <   <
+^
+^
+[ > < - ] v
+| ^ <   < |
+^         |
+v         <
+v
+[ > < - ] v
+| ^ <   < |
+^         |
+v         <
+v
+>>]<                                          ^
+  >-]<                                          ^
+    >-]<                                          ^
+      >-]<                                          ^
+        P
+        ^
+
+# IF
+# IF [CUR] THEN LOCATION_CODE = [CUR+1] ELSE LOCATION_CODE = [CUR+2].
+v                                                     <
+[>>]<<                                                  ^
+|  >-]<<                                                   ^
+|    >-]<<                                                    ^
+|      >-]<<                                                     ^
+|        P
+|        ^
+>>]<                                                     ^
+  >-]<                                                      ^
+    >-]<                                                       ^
+      >-]<                                                        ^
+        P
+        ^
+
+# PRINT-INDEX-1
+# WILL EXIT THE PROGRAM.
+v                                                                   <
+> P.<
