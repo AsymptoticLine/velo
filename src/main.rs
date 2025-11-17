@@ -32,8 +32,6 @@ fn main() -> ExitCode {
             ExitCode::FAILURE
         }
         Ok(code) => {
-            // let code_lines = harmonize_runes(raw_code);
-
             let code_lines: Vec<String> = code.lines().map(|line| line.to_string()).collect();
 
             let cosmos = materialize_runes(code_lines);

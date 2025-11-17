@@ -2,7 +2,7 @@
 v <
 
 # COPY [1] TO [2]
->                                 v  # GOTO COPY 0
+>                                 v   # GOTO COPY 0
 v                                   < # FROM COPY 0
 | # [3] = 64
 > >>> +++++ +++ v
@@ -36,7 +36,7 @@ v                                             < # FROM LESS-THAN 0
                                             ^
   v                                             < # FROM LESS-THAN 1
   | # IF [4]
-  > >+>+<<                                           >v     # GOTO IF 1
+  > >+>+<<                                           >v       # GOTO IF 1
                                                       ^
     # IF: [2] <= 90
     v >>-<-                                                <  # FROM IF 1-TRUE
@@ -67,7 +67,7 @@ v                                             < # FROM LESS-THAN 0
                                             ^
     v                                             < # FROM LESS-THAN 2
     | IF [4]
-    > >++>++<<                                       >v       # GOTO IF 2
+    > >++>++<<                                       >v          # GOTO IF 2
                                                       ^
       # IF: [2] <= 96
       v >>--<-                                                <  # FROM IF 2-TRUE
@@ -86,11 +86,11 @@ v                                             < # FROM LESS-THAN 0
       ^                     ]
       v > + >               <
       | # [4] = [2] <= [3](122)
-      > >>>+++<<<                          >v     # GOTO LESS-THAN 3
+      > >>>+++<<<                          >v         # GOTO LESS-THAN 3
                                             ^
       v                                             < # FROM LESS-THAN 3
       | # IF [4]
-      >  >+++>+++<<                                  >v # GOTO IF 3
+      >  >+++>+++<<                                  >v             # GOTO IF 3
                                                       ^
         # IF [2] <= 122
         v >>---<-                                                <  # FROM IF 3-TRUE
