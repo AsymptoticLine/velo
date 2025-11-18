@@ -337,10 +337,4 @@ impl Vessel {
         self.x = new_x;
         self.y = new_y;
     }
-
-    pub fn move_forward(&mut self) -> Result<(), &str> {
-        let (new_x, new_y) = self.get_next_coordinate()?;
-        self.move_to(new_x, new_y);
-        Ok(())
-    }
 }
